@@ -1,0 +1,232 @@
+{
+  "name": "Mira Weekly Status Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        32,
+        -80
+      ],
+      "id": "c7f5b8e2-d412-48d4-bd4b-bcecb733ae2e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0693de34-baee-4a41-b107-906634b26838",
+              "name": "chatInput",
+              "value": "Generate a weekly status report for the current sprint.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        208,
+        -80
+      ],
+      "id": "731856d6-f32c-449f-ab2c-6e8f775d1371",
+      "name": "Weekly Request"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "za1XY9zcEA6lQFfE",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/za1XY9zcEA6lQFfE",
+          "cachedResultName": "Mira_Base"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        -80
+      ],
+      "id": "b78f3f7c-89b8-4c8e-8493-d530623fd80a",
+      "name": "Call Mira Base",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.answer }}",
+        "destinationKey": "html",
+        "options": {
+          "tables": true
+        }
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        624,
+        -80
+      ],
+      "id": "4c6cb20e-ef19-4d07-abed-9e1c554c9028",
+      "name": "Markdown to HTML"
+    },
+    {
+      "parameters": {
+        "sendTo": "ashutoshd.lonkar@gmail.com",
+        "subject": "=Mira weekly status report · {{ $now.toFormat('yyyy-MM-dd') }}",
+        "message": "=<p><b>Mira weekly status report</b> · ABCDE Ltd. AI Adoption Project</p>{{ $('Get PDF').first().json.html }}",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1072,
+        -80
+      ],
+      "id": "8df88613-4a00-4765-9b6b-641e9112d453",
+      "name": "Send email",
+      "webhookId": "67c0a4ac-3ba2-4131-85db-d20cb1c2353c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5CHLKvN6ZU4xl0Yl",
+          "name": "Gmail account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Call Mira Base').first().json.doc_id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        848,
+        -80
+      ],
+      "id": "4d2bb618-eac1-4f1b-843c-76c372849e91",
+      "name": "Get PDF",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dJdewIuaL5KkHqzE",
+          "name": "Google Drive account 10"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Weekly Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Request": {
+      "main": [
+        [
+          {
+            "node": "Call Mira Base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Mira Base": {
+      "main": [
+        [
+          {
+            "node": "Markdown to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown to HTML": {
+      "main": [
+        [
+          {
+            "node": "Get PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PDF": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "912f7f0f-dc57-46c9-a35e-dab90a278ec5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ccff9c59abbda9419ca7ad34d64ae06e5164a483e2565a48c58c25f23d184bea"
+  },
+  "nodeGroups": [],
+  "id": "B6TiYLxFuFxhybUZ",
+  "tags": []
+}

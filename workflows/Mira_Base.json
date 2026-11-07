@@ -1,0 +1,1488 @@
+{
+  "name": "Mira_Base",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e2265ea9-2fb8-45e7-af0f-e7b200407746",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "d48bc3dc-ac67-44af-944e-1a6bd6fc7b84",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        -80
+      ],
+      "webhookId": "e2265ea9-2fb8-45e7-af0f-e7b200407746"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf835bae-3f46-4ab1-90b8-f779eaecd2bf",
+              "name": "question",
+              "value": "=   {{ ($json.chatInput ?? $json.body?.chatInput ?? '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "857fc819-95c0-47ad-a853-546a4d9dbd73",
+              "name": "started_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3dc3e39-3188-498a-888c-39e1706a1f7d",
+      "name": "Clean Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -112,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.question }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the intake classifier for Mira, a project intelligence assistant for the ABCDE Ltd. AI Adoption Project at Nexora.\nMira already has these project files loaded: the project description, an 8-phase timeline, a risk register with 10 risks, and a 25-task sprint board.\nYou do not answer the request. You only fill in fields about it.\n\nintent:\n- plan: create or draft a project plan\n- risk: a risk assessment, or a question about risks\n- status: a status report, progress summary, or task counts\n- milestone: blocked tasks, tasks at risk of missing deadlines, upcoming milestones or deadlines\n- stakeholder_update: an email or update written for stakeholders, leadership, a client or engineering\n- other: anything else\n\ninput_source:\n- files: the request is about the ABCDE Ltd. project, the AI Adoption Project, the task board, the timeline, the risk data or a sprint, or it names no other project\n- inline: the request supplies its own project or status text instead of using the files, usually in quotes or after the word for, such as a one-sentence idea or a claim like things are going fine\n- none: the request is about some other unnamed project and gives no content, such as a 2-week project with no details\n\nRule: if the request contains text in quotation marks describing a project or a status, input_source is inline and inline_text is that quoted text, copied exactly.\n\ninline_text: the exact quoted text when input_source is inline, otherwise an empty string.\nprovided_fields: only when input_source is inline or none, list which of these the request actually states for that other project: scope, goals, deliverables, timeline, team_size, technology, constraints, task_data. A duration such as 2 weeks counts as timeline. Otherwise an empty list.\nsprint: the sprint number if one is named, otherwise 0.\ntop_n: the number if the user asks for the top N items, otherwise 0.\nwindow_days: the time window in days if one is named, for example next 2 weeks is 14, otherwise 0.\naudience: leadership, engineering or client if named or clearly implied; for a general stakeholder update use leadership; otherwise an empty string."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "6f75a956-768d-4b37-bafe-b1a3748b0f1f",
+      "name": "Orchestrator",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        112,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "d9b939ca-a361-4f30-a631-a4ed34a1f382",
+      "name": "OpenAI.Orchestrator",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        384
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wbtEmFHDtqtO0HhJ",
+          "name": "OpenAI account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"intent\": \"plan\",\n  \"input_source\": \"inline\",\n  \"inline_text\": \"We want to build a chatbot.\",\n  \"provided_fields\": [\"timeline\"],\n  \"sprint\": 3,\n  \"top_n\": 3,\n  \"window_days\": 14,\n  \"audience\": \"leadership\"\n}"
+      },
+      "id": "1a595c0e-e983-4014-bafd-8fe8a582bb16",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "14vlrIqSyy7_coK_6P8wRp_NXgl1u_r7p",
+          "mode": "list",
+          "cachedResultName": "project_description.txt",
+          "cachedResultUrl": "https://drive.google.com/file/d/14vlrIqSyy7_coK_6P8wRp_NXgl1u_r7p/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "id": "c3b48e00-6697-4106-b9e4-1e2bbb3c0a1e",
+      "name": "Download Description",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        448,
+        144
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dJdewIuaL5KkHqzE",
+          "name": "Google Drive account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "3187b094-2b8e-4bf7-b2aa-6566700faed6",
+      "name": "Read Description",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1DYYm_0ezYlapjUCoQAo3YTTT9VI9IrUh",
+          "mode": "list",
+          "cachedResultName": "project_timeline.csv",
+          "cachedResultUrl": "https://drive.google.com/file/d/1DYYm_0ezYlapjUCoQAo3YTTT9VI9IrUh/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "id": "eda72cac-6c96-4ccc-8e2d-c889cb5f39cc",
+      "name": "Download Timeline",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        656,
+        144
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dJdewIuaL5KkHqzE",
+          "name": "Google Drive account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3e4cd96c-f93e-4ef3-bd3c-9bf5537af155",
+      "name": "Read Timeline",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1jlipc0G9u2CG4Wkx_O0B8S4nYVldFidK",
+          "mode": "list",
+          "cachedResultName": "project_risks.csv",
+          "cachedResultUrl": "https://drive.google.com/file/d/1jlipc0G9u2CG4Wkx_O0B8S4nYVldFidK/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "id": "60c4f51f-16dd-4af6-acec-ecbb9b5bee5e",
+      "name": "Download Project Risks",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        880,
+        144
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dJdewIuaL5KkHqzE",
+          "name": "Google Drive account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "191fd30b-cce5-452d-b505-e581d86e0b5f",
+      "name": "Read Risks",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1024,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1GI7G1oSifTrIy-xbm_7UBah5tJi3ml5o",
+          "mode": "list",
+          "cachedResultName": "sample_task_board.csv",
+          "cachedResultUrl": "https://drive.google.com/file/d/1GI7G1oSifTrIy-xbm_7UBah5tJi3ml5o/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "id": "69c9da09-ad87-4cc7-9a16-058b4de05167",
+      "name": "Download Tasks",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1136,
+        144
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dJdewIuaL5KkHqzE",
+          "name": "Google Drive account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b6ee332a-5498-458d-aea1-864daea320aa",
+      "name": "Read Tasks",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mira · Route & Build Context\n// 1) Rules decide which agent runs.  2) Builds the facts for that agent only.\nconst o = $('Orchestrator').first().json.output;\nconst question = $('Clean Input').first().json.question;\n\n// Agents that exist so far. Add each new one here as you build it.\nconst AGENTS_BUILT = { plan: 'planner', risk: 'risk', status: 'status', milestone: 'milestone', stakeholder_update: 'stakeholder' };\n\n// What a request about some OTHER project must include before Mira can answer it\nconst REQUIRED = {\n  plan: ['scope', 'goals', 'deliverables', 'timeline', 'team_size'],\n  risk: ['scope', 'goals', 'timeline', 'technology', 'constraints'],\n  status: ['task_data'],\n  milestone: ['timeline', 'task_data'],\n  stakeholder_update: ['task_data'],\n  other: [],\n};\nconst provided = o.provided_fields ?? [];\nconst missing = (REQUIRED[o.intent] ?? []).filter(f => !provided.includes(f));\n\n// ── 1. Route ──\nconst route = (o.input_source === 'files' && AGENTS_BUILT[o.intent]) ? AGENTS_BUILT[o.intent] : 'clarifier';\n\n// ── Shared settings (documented assumptions) ──\nconst AS_OF = '2026-04-27';          // project \"today\": the files have no current date, and the real date is after the project ends\nconst PROJECT_START = '2026-03-30';  // Monday of week 1: not in the files; chosen so Sprints 1-3 fall inside Phases 1-3\nconst DUE_SOON_DAYS = 7;             // open task due within 7 days = at risk\n\n// ── Shared helpers ──\nconst DAY = 86400000;\nconst day = s => new Date(s + 'T00:00:00Z');\nconst iso = d => d.toISOString().slice(0, 10);\nconst addDays = (d, n) => new Date(d.getTime() + n * DAY);\nconst asOf = day(AS_OF);\nconst daysTo = d => Math.round((day(d) - asOf) / DAY);\nconst plural = n => `${n} day${n === 1 ? '' : 's'}`;\nconst sprintNo = t => parseInt(String(t.sprint).replace(/\\D/g, ''), 10);\n// Keep one row per ID, even if a file was read more than once\nconst unique = (nodeName, idField) => [...new Map($(nodeName).all().map(item => [item.json[idField], item.json])).values()];\n// Why an open task needs attention (empty string if it doesn't)\nconst riskReason = t => {\n  if (t.status === 'Done') return '';\n  const d = daysTo(t.due_date);\n  if (t.status === 'Blocked') return 'blocked';\n  if (d < 0) return `${plural(-d)} overdue, still ${t.status}`;\n  if (d <= DUE_SOON_DAYS) return `due in ${plural(d)}, still ${t.status}`;\n  return '';\n};\n\n// ── 2. Facts for the chosen agent ──\nconst description = $('Read Description').first().json.data;\nlet context;\n\nif (route === 'planner') {\n  const phases = $('Read Timeline').all().map(item => item.json);\n  const timeline = phases.map(p =>\n    `Phase ${p.phase}: ${p.phase_name} | weeks ${p.start_week}-${p.end_week}\\n` +\n    `  Activities: ${p.key_activities}\\n` +\n    `  Milestones/deliverables: ${p.milestones_deliverables}`\n  ).join('\\n');\n  context = `PROJECT DESCRIPTION:\\n${description}\\n\\nTIMELINE (${phases.length} phases):\\n${timeline}`;\n\n} else if (route === 'risk') {\n  const risks = unique('Read Risks', 'risk_id');\n  const register = risks.map(x =>\n    `[${x.risk_id}] ${x.category} | Risk: ${x.risk_challenge} | Impact: ${x.impact} | Mitigation: ${x.mitigation_strategy}`\n  ).join('\\n');\n  const topN = o.top_n > 0 ? Math.min(o.top_n, risks.length) : 0;\n  context = [\n    `PROJECT DESCRIPTION:\\n${description}`,\n    `RISK REGISTER (${risks.length} risks):\\n${register}`,\n    'NOTE: The risk register has no likelihood or severity scores.',\n    topN ? `TOP ${topN} REQUESTED: choose exactly ${topN} risks.` : 'FULL ASSESSMENT REQUESTED: include every risk in the register.',\n  ].join('\\n\\n');\n\n} else if (route === 'status') {\n  const all = unique('Read Tasks', 'task_id');\n\n  // Which sprint? A named sprint, else \"current/this sprint\", else the whole project\n  const sprints = [...new Set(all.map(sprintNo))].sort((a, b) => a - b);\n  const lastDue = n => all.filter(t => sprintNo(t) === n).map(t => t.due_date).sort().at(-1);\n  const currentSprint = sprints.find(n => day(lastDue(n)) >= asOf) ?? sprints.at(-1);\n  const asksCurrent = /\\b(current|this) sprint\\b/i.test(question);\n  const sprint = o.sprint > 0 ? o.sprint : (asksCurrent ? currentSprint : 0);\n  const tasks = sprint ? all.filter(t => sprintNo(t) === sprint) : all;\n\n  // Counts: done in code, never by the LLM\n  const count = s => tasks.filter(t => t.status === s).length;\n  const attention = tasks.filter(t => riskReason(t)).map(t => `[${t.task_id}] ${t.task_name}: ${riskReason(t)}`);\n\n  // Health rule: Red if overdue more than 7 days or a blocked task is due within 14 days;\n  // Amber if anything is overdue or blocked; Green otherwise.\n  const overdue = tasks.filter(t => t.status !== 'Done' && daysTo(t.due_date) < 0);\n  const blocked = tasks.filter(t => t.status === 'Blocked');\n  const red = overdue.some(t => daysTo(t.due_date) < -7) || blocked.some(t => daysTo(t.due_date) <= 14);\n  const health = red ? 'Red' : (overdue.length || blocked.length ? 'Amber' : 'Green');\n  const reason = [\n    overdue.length ? `${overdue.length} overdue (${overdue.map(t => t.task_id).join(', ')})` : '',\n    blocked.length ? `${blocked.length} blocked (${blocked.map(t => t.task_id).join(', ')})` : '',\n  ].filter(Boolean).join('; ') || 'no overdue or blocked tasks';\n\n  const line = t => `[${t.task_id}] ${t.task_name} | owner ${t.assignee} | ${t.priority} priority | ${t.sprint} | due ${t.due_date}`;\n  const group = s => tasks.filter(t => t.status === s).map(line).join('\\n') || 'None';\n\n  context = [\n    `AS OF: ${AS_OF} (project \"today\"). Current sprint: Sprint ${currentSprint}.`,\n    `SCOPE: ${sprint ? `Sprint ${sprint} only` : 'Whole project, all sprints'}`,\n    sprint && !tasks.length ? `NOTE: Sprint ${sprint} does not exist on the task board.` : '',\n    `COUNTS BY STATUS: Done ${count('Done')}, In Progress ${count('In Progress')}, Blocked ${count('Blocked')}, To Do ${count('To Do')}, Total ${tasks.length}`,\n    `HEALTH: ${health} (${reason})`,\n    `DONE:\\n${group('Done')}`,\n    `IN PROGRESS:\\n${group('In Progress')}`,\n    `BLOCKED:\\n${group('Blocked')}`,\n    `TO DO:\\n${group('To Do')}`,\n    `NEEDS ATTENTION:\\n${attention.join('\\n') || 'None'}`,\n  ].filter(Boolean).join('\\n\\n');\n\n} else if (route === 'milestone') {\n  const WINDOW = o.window_days > 0 ? o.window_days : 14;   // \"upcoming\" = next 14 days unless the user names a window\n  const windowEnd = addDays(asOf, WINDOW);\n  const inWindow = s => day(s) >= asOf && day(s) <= windowEnd;\n  const start = day(PROJECT_START);\n\n  // Turn timeline weeks into dates\n  const phases = $('Read Timeline').all().map(item => item.json).map(p => ({\n    ...p,\n    start_date: iso(addDays(start, (Number(p.start_week) - 1) * 7)),\n    end_date: iso(addDays(start, Number(p.end_week) * 7 - 1)),\n  }));\n  const current = phases.find(p => day(p.start_date) <= asOf && day(p.end_date) >= asOf);\n  const milestonesDue = phases.filter(p => inWindow(p.end_date));\n  const phasesStarting = phases.filter(p => day(p.start_date) > asOf && day(p.start_date) <= windowEnd);\n\n  const tasks = unique('Read Tasks', 'task_id');\n  const atRisk = tasks.filter(t => riskReason(t));\n  const dueInWindow = tasks.filter(t => t.status !== 'Done' && inWindow(t.due_date));\n\n  context = [\n    `AS OF: ${AS_OF} (project \"today\"). WINDOW: next ${WINDOW} days, ${AS_OF} to ${iso(windowEnd)}.`,\n    current ? `CURRENT PHASE: Phase ${current.phase} ${current.phase_name} (${current.start_date} to ${current.end_date})` : '',\n    `MILESTONES DUE IN WINDOW (phase-end deliverables):\\n${milestonesDue.map(p =>\n      `Phase ${p.phase} ${p.phase_name}, due ${p.end_date}: ${p.milestones_deliverables}`).join('\\n') || 'None in this window'}`,\n    `PHASES STARTING IN WINDOW:\\n${phasesStarting.map(p => `Phase ${p.phase} ${p.phase_name} starts ${p.start_date}`).join('\\n') || 'None'}`,\n    `BLOCKED OR AT-RISK TASKS:\\n${atRisk.map(t =>\n      `[${t.task_id}] ${t.task_name} | ${t.status} | owner ${t.assignee} | due ${t.due_date} | reason: ${riskReason(t)}\\n  Task details: ${t.description}`).join('\\n') || 'None'}`,\n    `OPEN TASKS DUE IN WINDOW:\\n${dueInWindow.map(t => `[${t.task_id}] ${t.task_name} | ${t.status} | owner ${t.assignee} | due ${t.due_date}`).join('\\n') || 'None'}`,\n    `ASSUMPTIONS: Week 1 starts ${PROJECT_START} (not stated in the files). At risk means blocked, overdue, or open and due within ${DUE_SOON_DAYS} days.`,\n  ].filter(Boolean).join('\\n\\n');\n\n} else if (route === 'stakeholder') {\n  const all = unique('Read Tasks', 'task_id');\n\n  // Which sprint? The named sprint, else the current sprint\n  const sprints = [...new Set(all.map(sprintNo))].sort((a, b) => a - b);\n  const lastDue = n => all.filter(t => sprintNo(t) === n).map(t => t.due_date).sort().at(-1);\n  const currentSprint = sprints.find(n => day(lastDue(n)) >= asOf) ?? sprints.at(-1);\n  const sprint = o.sprint > 0 ? o.sprint : currentSprint;\n  const tasks = all.filter(t => sprintNo(t) === sprint);   // ONLY this sprint: other sprints never reach the agent\n  const count = s => tasks.filter(t => t.status === s).length;\n  const audience = o.audience || 'leadership';\n\n  context = [\n    `SPRINT: Sprint ${sprint}${o.sprint > 0 ? '' : ' (current sprint)'}. AUDIENCE: ${audience}. AS OF: ${AS_OF}.`,\n    !tasks.length ? `NOTE: Sprint ${sprint} does not exist on the task board.` : '',\n    `SPRINT ${sprint} COUNTS: Done ${count('Done')}, In Progress ${count('In Progress')}, Blocked ${count('Blocked')}, To Do ${count('To Do')}, Total ${tasks.length}`,\n    `SPRINT ${sprint} TASKS:\\n${tasks.map(t =>\n      `[${t.task_id}] ${t.task_name} | ${t.status} | owner ${t.assignee} | due ${t.due_date}${riskReason(t) ? ' | attention: ' + riskReason(t) : ''}\\n  Task details: ${t.description}`).join('\\n')}`,\n    `PROJECT CONTEXT (for the opening line only):\\n${description}`,\n  ].filter(Boolean).join('\\n\\n');\n\n} else {\n  const notBuiltYet = o.input_source === 'files';\n  const noTaskData = ['status', 'stakeholder_update'].includes(o.intent) && o.input_source !== 'files';\n  context = [\n    `REQUESTED: ${o.intent}`,\n    `INPUT GIVEN: ${o.inline_text ? '\"' + o.inline_text + '\"' : 'no project content'}`,\n    notBuiltYet\n      ? 'PROBLEM: Mira cannot answer this type of request yet.'\n      : `MISSING INFORMATION: ${missing.length ? missing.join(', ') : 'what the user wants Mira to do'}`,\n    noTaskData ? 'NO TASK DATA WAS PROVIDED.' : '',\n    'MIRA CAN DO: project plans, risk assessments, status reports, milestone and deadline checks, and stakeholder updates for the ABCDE Ltd. AI Adoption Project.',\n  ].filter(Boolean).join('\\n');\n}\n\n// Curly braces confuse n8n's LLM prompt templates, so remove any\nconst prompt = `USER REQUEST:\\n${question}\\n\\nFACTS:\\n${context}`.replace(/[{}]/g, '');\n\nreturn [{ json: { route, intent: o.intent, input_source: o.input_source, missing: route === 'clarifier' ? missing : [], prompt } }];"
+      },
+      "id": "41bfe0c8-009f-4f55-aa58-4c1f79808656",
+      "name": "Route & Build Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "planner",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4dad2d1c-2a6b-47b8-9f50-495bca7f6b2f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Planner"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3a5d3d68-c4f5-401e-b819-6ba8a8269496",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "clarifier",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Clarifier"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b863851c-50fe-42a1-a94d-56431d29b91f",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "risk",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Risk"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4241c957-adb2-4b1d-8ab5-672f05cbf6ad",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "status",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Status"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bb6f2912-df3d-407d-953a-3fc297770f14",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "milestone",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Milestone"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6c65e898-d660-447e-94b8-57b0f12cb194",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "stakeholder",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Stakeholder"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d8e466bd-01d2-4f4e-a276-c1bbe36bc716",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the Planner Agent in Mira, a project intelligence assistant used by PMs and TPMs at Nexora. \n\nYour job: produce a structured project plan for the ABCDE Ltd. AI Adoption Project using only the project description and timeline in FACTS.  Output these sections, in this order: ## Project overview Two or three sentences: the objective, the business areas in scope, and the goals exactly as stated in the description. \n## Phase plan A Markdown table with columns: Phase | Weeks | Key activities | Milestones and deliverables. The Phase column shows the number and name, for example \"3. Use Case Selection\". One row per phase in FACTS, in order.\n## Milestone checklist Each milestone or deliverable as a checkbox line, with the week it is due (the phase's end week). \n## Open questions for the PM Information a full plan would need that the files do not provide, such as the start date, budget, named owners and team size. \nAsk, do not assume.  \n\nGROUNDING RULES (these override everything else): \n1. Use only the FACTS. You have no other knowledge of this project. \n2. Copy phase names, weeks, activities, milestones and goals exactly as given. \n3. Never invent dates, budgets, people, team sizes, percentages or goals that are not in FACTS. The timeline uses week numbers, so plan in weeks. \n4. If the user asks for something FACTS do not contain, say plainly that the project files do not include it. \n5. Write in clean Markdown with no preamble such as \"Sure\" or \"Here is\"."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "cd530f90-2a86-4367-b737-c8819e86db63",
+      "name": "Planner Agent",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1904,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "27922f57-2e5f-48f3-b870-d72db41516c8",
+      "name": "OPEN AI.Planner",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2048,
+        -272
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wbtEmFHDtqtO0HhJ",
+          "name": "OpenAI account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mira · Build Langfuse Trace (OpenTelemetry format)\n// One trace per request: a root span plus one span per LLM call.\nconst PROMPT_VERSION = 'v1';   // change to v2, v3... whenever you edit any prompt\nconst MODEL = 'gpt-4o-mini';\n\nconst clean = $('Clean Input').first().json;\nconst orch = $('Orchestrator').first().json.output;\nconst r = $('Route & Build Context').first().json;\nconst answer = String($input.first().json.text ?? '');\n\n// ── helpers ──\nconst hex = n => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');\nconst nanos = ms => String(ms) + '000000';\nconst tokens = s => Math.ceil(String(s ?? '').length / 4);   // estimate: ~4 characters per token\nconst str = (key, v) => ({ key, value: { stringValue: typeof v === 'string' ? v : JSON.stringify(v) } });\nconst list = (key, arr) => ({ key, value: { arrayValue: { values: arr.map(x => ({ stringValue: String(x) })) } } });\n\nconst endMs = Date.now();\nconst startMs = Date.parse(clean.started_at) || endMs;\nconst traceId = hex(32), rootId = hex(16);\nconst tags = [r.route, PROMPT_VERSION];\n\n// Trace-level attributes go on every span so filters work\nconst common = [\n  str('langfuse.trace.name', 'mira-request'),\n  list('langfuse.trace.tags', tags),\n  str('langfuse.trace.metadata.route', r.route),\n  str('langfuse.trace.metadata.intent', r.intent),\n  str('langfuse.trace.metadata.input_source', r.input_source),\n  str('langfuse.trace.metadata.prompt_version', PROMPT_VERSION),\n];\n\nconst span = (id, parent, name, attrs) => ({\n  traceId, spanId: id, ...(parent ? { parentSpanId: parent } : {}),\n  name, kind: 1, startTimeUnixNano: nanos(startMs), endTimeUnixNano: nanos(endMs),\n  attributes: [...common, ...attrs], status: { code: 1 },\n});\n\nconst generation = (name, input, output, inTok, outTok) => span(hex(16), rootId, name, [\n  str('langfuse.observation.type', 'generation'),\n  str('langfuse.observation.model.name', MODEL),\n  str('langfuse.observation.input', input),\n  str('langfuse.observation.output', output),\n  str('langfuse.observation.usage_details', { input: inTok, output: outTok }),\n]);\n\nconst spans = [\n  span(rootId, null, 'mira-request', [\n    str('langfuse.observation.type', 'agent'),\n    str('langfuse.observation.input', clean.question),\n    str('langfuse.observation.output', answer),\n    str('langfuse.trace.input', clean.question),\n    str('langfuse.trace.output', answer),\n  ]),\n  generation('orchestrator', clean.question, orch, 700 + tokens(clean.question), tokens(JSON.stringify(orch))),\n  generation(`${r.route}-agent`, r.prompt, answer, 450 + tokens(r.prompt), tokens(answer)),\n];\n\nconst otel = { resourceSpans: [{\n  resource: { attributes: [str('service.name', 'mira-n8n')] },\n  scopeSpans: [{ scope: { name: 'mira-n8n' }, spans }],\n}] };\n\nreturn [{ json: { otel, answer, route: r.route } }];"
+      },
+      "id": "c5523314-c639-4488-9f9f-3200506f4e20",
+      "name": "Build Langfuse Trace",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us.cloud.langfuse.com/api/public/otel/v1/traces",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-langfuse-ingestion-version",
+              "value": "4"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.otel) }}",
+        "options": {}
+      },
+      "id": "b5ae26d5-d30d-4610-82de-74cfe891dc80",
+      "name": "Send to langfuse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2688,
+        224
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Hx6vkiTNR5Fi7I2k",
+          "name": "Unnamed credential"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e783b88-10a2-472b-bfd2-bd35abbe6444",
+              "name": "output",
+              "value": "={{ $('Build Langfuse Trace').first().json.answer }}",
+              "type": "string"
+            },
+            {
+              "id": "a20403c0-a720-42fd-923a-27a153b5ab9f",
+              "name": "route",
+              "value": "={{ $('Build Langfuse Trace').first().json.route }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa66c7bb-b608-42cb-a585-981bc5fc435d",
+      "name": "Mira Reply",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3104,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the Clarifier Agent in Mira, a project intelligence assistant used by PMs and TPMs at Nexora.\n\nMira cannot answer this request as it stands. Your job is to say so clearly and ask for what is needed. You must not produce a plan, a risk list, a status report, task names, numbers or any made-up example.\n\nIf FACTS show a PROBLEM, explain it in one sentence and suggest what the user can ask instead, using the MIRA CAN DO line.\n\nOtherwise:\n1. One sentence restating what the user asked for.\n2. One sentence saying the input does not contain enough detail to do this without guessing. If FACTS say no task data was provided, say exactly: \"No task data is available for this request.\"\n3. A numbered list with one specific question for each item in MISSING INFORMATION.\n4. One sentence offering the alternative: Mira can produce this for the ABCDE Ltd. AI Adoption Project, whose files are already loaded.\n\nKeep it under 150 words."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "75cb55e9-bda7-467f-bb87-49f7ed85a024",
+      "name": "Clarifier Agent",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1904,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "a2eba2ba-3750-42b6-beab-61479298d1dd",
+      "name": "OpenAI.Clarifier",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2048,
+        144
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wbtEmFHDtqtO0HhJ",
+          "name": "OpenAI account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the Risk Assessor Agent in Mira, a project intelligence assistant used by PMs and TPMs at Nexora.\nYour job: assess risks for the ABCDE Ltd. AI Adoption Project using only the risk register and project description in FACTS.\n\nIf FACTS say TOP N REQUESTED:\n- List exactly N risks from the register, each with its ID, category, impact and mitigation.\n- The register has no likelihood or severity scores, so rank by how directly each risk's impact threatens the goals stated in the project description. Give that reason in one sentence per risk.\n- Say once that the register has no likelihood or severity scores, so this ranking is a judgment based on the stated goals.\n\nIf FACTS say FULL ASSESSMENT REQUESTED:\n## Risk matrix\nA Markdown table with columns: ID | Category | Risk | Impact | Mitigation. One row for every risk in the register, in order.\n## Risks to act on first\nThe three risks that most directly threaten the stated goals, each with one sentence of reasoning and the first step of its mitigation.\nSay once that the register has no likelihood or severity scores.\n\nGROUNDING RULES (these override everything else):\n1. Use only the FACTS. You have no other knowledge of this project.\n2. Copy risk IDs, categories, impacts and mitigations exactly as given.\n3. Every time you mention a risk, include its ID in square brackets, for example [R05].\n4. Never invent a risk, score, probability, owner or date that is not in FACTS.\n5. Write in clean Markdown with no preamble such as \"Sure\" or \"Here is\"."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "79704c8d-439a-413b-974c-6d5923514783",
+      "name": "Risk Assessor Agent",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1920,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "id": "6ef5a32d-0a17-4690-9e41-5eb5d9e0e792",
+      "name": "OpenAI.RiskAssessor",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1920,
+        176
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wbtEmFHDtqtO0HhJ",
+          "name": "OpenAI account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the Status Reporter Agent in Mira, a project intelligence assistant used by PMs and TPMs at Nexora.\nYour job: report project status from the task board facts in FACTS, for the scope shown in FACTS (one sprint or the whole project).\n\nIf the user only asks for counts or a short summary, give only:\n## Summary\nOverall health exactly as given in FACTS with its reason, and the counts by status exactly as given.\n## Needs attention\nEach item from NEEDS ATTENTION, with its reason.\n\nOtherwise give the full report, in this order:\n## Summary\nOverall health exactly as given in FACTS with its reason, the scope, and the counts by status exactly as given.\n## Completed\n## In progress\n## Blocked\n## To do\nUnder each status heading, list the tasks with ID, name, owner and due date. Write \"None\" if the list is empty.\n## Needs attention\nEach item from NEEDS ATTENTION, with its reason and one concrete next step for the owner.\n\nIf FACTS say a sprint does not exist, say so and list the sprints the user can ask about instead. Do not invent tasks.\n\nGROUNDING RULES (these override everything else):\n1. Use only the FACTS. You have no other knowledge of this project.\n2. Copy every count, status, date, owner and task name exactly as given. Never calculate a new number.\n3. Every time you mention a task, include its ID in square brackets, for example [T006].\n4. Never mention a task, person, percentage or date that is not in FACTS.\n5. Write in clean Markdown with no preamble such as \"Sure\" or \"Here is\"."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "68e8e7c0-a322-409e-be6d-2a7686e3ea10",
+      "name": "Status Reporter Agent",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1920,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the Milestone Tracker Agent in Mira, a project intelligence assistant used by PMs and TPMs at Nexora.\nYour job: answer questions about blocked tasks, tasks at risk of missing their deadline, and upcoming milestones, using the comparisons already computed in FACTS.\n\nAnswer the question that was asked first:\n- If the user asks about blocked or at-risk tasks: list every task under BLOCKED OR AT-RISK TASKS, blocked tasks first, each with its ID, name, owner, due date and the reason given. For each, suggest one specific action for this week, based on its task details.\n- If the user asks about upcoming milestones: list every milestone under MILESTONES DUE IN WINDOW with its phase and due date, say which phase is current and which starts next, then list the open tasks due in the window that lead up to it.\n- If FACTS show no milestones in the window, say so plainly.\n\nEnd with one line stating the assumptions shown in FACTS.\n\nGROUNDING RULES (these override everything else):\n1. Use only the FACTS. You have no other knowledge of this project.\n2. A task is at risk only if FACTS list it under BLOCKED OR AT-RISK TASKS, with the reason given. Never decide that yourself.\n3. Copy every date, status, owner, reason and milestone exactly as given. Never calculate a new date or number.\n4. Every time you mention a task, include its ID in square brackets, for example [T024].\n5. Never mention a task, milestone, phase, person or date that is not in FACTS.\n6. Write in clean Markdown with no preamble such as \"Sure\" or \"Here is\".\n7.Answer only the question asked; include milestones only if asked.\n8.Write your own headings in sentence case."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1936,
+        736
+      ],
+      "id": "7948eebe-f37f-4b95-82fe-926af8b5686d",
+      "name": "Milestone Tracking Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1936,
+        608
+      ],
+      "id": "444e8fc1-f46e-4a82-bcd6-adb083ea658a",
+      "name": "OpenAI.Milestone",
+      "credentials": {
+        "openAiApi": {
+          "id": "wbtEmFHDtqtO0HhJ",
+          "name": "OpenAI account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "id": "9895c762-a0ea-4838-9870-e0cfc1365c81",
+      "name": "OpenAI.Status",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2080,
+        592
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wbtEmFHDtqtO0HhJ",
+          "name": "OpenAI account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the Stakeholder Update Agent in Mira, a project intelligence assistant used by PMs and TPMs at Nexora.\nYour job: write a professional stakeholder update email for the sprint and audience shown in FACTS.\n\nFormat:\nSubject: one line naming the project and the sprint\nBody:\n- A greeting suited to the audience\n- A two-sentence summary of the sprint, using the counts exactly as given\n- Completed: each done task, in plain language, with its ID\n- Still open: each task not done, with its status and the attention reason from FACTS if there is one\n- Next steps: one concrete next step for each open task only\n- Sign-off from \"Project Management Office, Nexora\"\n\nTone by audience: leadership gets outcomes and risks in plain language; engineering gets task-level detail; client avoids internal owner names.\nIf FACTS say the sprint does not exist, say so instead of writing an email.\n\nGROUNDING RULES (these override everything else):\n1. Use only the FACTS. You have no other knowledge of this project.\n2. Mention only tasks from the sprint shown in FACTS. Never mention any other sprint's work.\n3. Copy every count, status, date and owner exactly as given. Never calculate a new number.\n4. Every time you mention a task, include its ID in square brackets, for example [T004].\n5. Never invent dates, percentages, people or plans that are not in FACTS.\n6. Write the email in plain text with no preamble such as \"Sure\" or \"Here is\"."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1904,
+        -448
+      ],
+      "id": "96b4eb6c-f11b-4efe-8a5b-fa6497be8da6",
+      "name": "Stakeholder Update Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1904,
+        -288
+      ],
+      "id": "55282e2d-f084-45e6-8718-1f5cadbf75c9",
+      "name": "OpenAI.Stakeholder",
+      "credentials": {
+        "openAiApi": {
+          "id": "wbtEmFHDtqtO0HhJ",
+          "name": "OpenAI account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋\nMy name is Ashutosh . How can I assist you today?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -544,
+        160
+      ],
+      "id": "6e0796bb-05e7-4490-b8d8-297c2a4fe62a",
+      "name": "When chat message received",
+      "webhookId": "72d23de2-dc8d-4f8d-a551-5cac4ca3b9bd"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -352,
+        320
+      ],
+      "id": "6ef278e6-2630-4c5a-8ba8-46b24f750d9f",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "8193dfb4-bb58-4b86-890d-d3f3fbcf3f75",
+              "leftValue": "={{ $('Route & Build Context').first().json.route }}",
+              "rightValue": "clarifier",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2848,
+        224
+      ],
+      "id": "29fe057d-93f8-4de5-894a-5ca81b637a00",
+      "name": "Clarifier Output ?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mira · Prepare Document\n// Wraps the agent's answer in a titled document and names it.\nconst route = $('Route & Build Context').first().json.route;\nconst question = $('Clean Input').first().json.question;\nconst answer = $('Build Langfuse Trace').first().json.answer;\n\nconst TITLES = {\n  planner: 'Project Plan',\n  risk: 'Risk Assessment',\n  status: 'Status Report',\n  milestone: 'Milestone and Deadline Check',\n  stakeholder: 'Stakeholder Update',\n};\nconst title = TITLES[route] ?? 'Mira Report';\nconst docName = `Mira - ${title} - ${$now.toFormat('yyyy-MM-dd HH:mm')}`;\n\nconst content = [\n  `# Mira · ${title}`,\n  '',\n  `**Project:** ABCDE Ltd. AI Adoption Project  `,\n  `**Generated:** ${$now.toFormat('yyyy-MM-dd HH:mm')}  `,\n  `**Request:** ${question}`,\n  '',\n  '---',\n  '',\n  answer,\n  '',\n  '---',\n  '',\n  '_Generated by Mira from the project files. Counts and dates are computed in code; please review before sharing._',\n].join('\\n');\n\nreturn [{ json: { title, docName, content, route, answer } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        480
+      ],
+      "id": "64b72a4f-4527-453a-99b9-d0261962062b",
+      "name": "Prepare Document",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files?fields=id,name",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Prepare Document').first().json.docName, mimeType: 'application/vnd.google-apps.document', parents: ['191xoMsOyKAehii2W0cOtlaVjoIUmcZ8o'] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3072,
+        656
+      ],
+      "id": "4afcd8b0-49b2-4fd5-aa94-079890a2044c",
+      "name": "Create Google Doc",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dJdewIuaL5KkHqzE",
+          "name": "Google Drive account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=\thttps://www.googleapis.com/upload/drive/v3/files/{{ $json.id }}?uploadType=media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "=<html><head><meta charset=\"utf-8\"></head><body>{{ $('Markdown to HTML').first().json.html }}</body></html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3088,
+        864
+      ],
+      "id": "28d9dbab-4285-4fda-a99a-87f9d09f5691",
+      "name": "Write Report into Doc",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dJdewIuaL5KkHqzE",
+          "name": "Google Drive account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.content }}",
+        "destinationKey": "html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        2848,
+        656
+      ],
+      "id": "f318326f-7968-4f33-b7c8-b00fdab90cff",
+      "name": "Markdown to HTML"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d692aa33-d7b3-4b09-9617-23d5a1093abd",
+              "name": "output",
+              "value": "=✅ Your **{{ $('Prepare Document').first().json.title }}** has been saved to Google Drive in the **Mira Outputs** folder as \"{{ $('Prepare Document').first().json.docName }}\". [Open document](https://docs.google.com/document/d/{{ $('Create Google Doc').first().json.id }}/edit) · [Download PDF](https://docs.google.com/document/d/{{ $('Create Google Doc').first().json.id }}/export?format=pdf) · [Download Word](https://docs.google.com/document/d/{{ $('Create Google Doc').first().json.id }}/export?format=docx) · [Open Mira Outputs folder](https://drive.google.com/drive/folders/191xoMsOyKAehii2W0cOtlaVjoIUmcZ8o)",
+              "type": "string"
+            },
+            {
+              "id": "cebafe50-2fa2-4583-8ac5-23f09126bbd3",
+              "name": "route",
+              "value": "={{ $('Prepare Document').first().json.route }}",
+              "type": "string"
+            },
+            {
+              "id": "b2a0d54c-79b7-401b-9f6e-aedcd1f64993",
+              "name": "answer",
+              "value": "={{ $('Prepare Document').first().json.answer }}",
+              "type": "string"
+            },
+            {
+              "id": "8bdd582c-90b6-4fb6-9775-696112795aa9",
+              "name": "doc_id",
+              "value": "={{ $('Create Google Doc').first().json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3312,
+        864
+      ],
+      "id": "dd22eabd-0417-4fec-85e9-aac0db6c9bce",
+      "name": "Document Reply"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "body": {
+            "chatInput": "Generate a stakeholder update email summarizing Sprint 2 progress"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Clean Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Input": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Download Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI.Orchestrator": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Description": {
+      "main": [
+        [
+          {
+            "node": "Read Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Description": {
+      "main": [
+        [
+          {
+            "node": "Download Timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Timeline": {
+      "main": [
+        [
+          {
+            "node": "Read Timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Timeline": {
+      "main": [
+        [
+          {
+            "node": "Download Project Risks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Project Risks": {
+      "main": [
+        [
+          {
+            "node": "Read Risks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Risks": {
+      "main": [
+        [
+          {
+            "node": "Download Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Tasks": {
+      "main": [
+        [
+          {
+            "node": "Read Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Tasks": {
+      "main": [
+        [
+          {
+            "node": "Route & Build Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route & Build Context": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Planner Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clarifier Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Risk Assessor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Status Reporter Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Milestone Tracking Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stakeholder Update Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planner Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Langfuse Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OPEN AI.Planner": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Planner Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Langfuse Trace": {
+      "main": [
+        [
+          {
+            "node": "Send to langfuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to langfuse": {
+      "main": [
+        [
+          {
+            "node": "Clarifier Output ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clarifier Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Langfuse Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI.Clarifier": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Clarifier Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Risk Assessor Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Langfuse Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI.RiskAssessor": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Risk Assessor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status Reporter Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Langfuse Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI.Milestone": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Milestone Tracking Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI.Status": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Status Reporter Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Milestone Tracking Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Langfuse Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI.Stakeholder": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Stakeholder Update Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stakeholder Update Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Langfuse Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Clean Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Clean Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clarifier Output ?": {
+      "main": [
+        [
+          {
+            "node": "Mira Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Document": {
+      "main": [
+        [
+          {
+            "node": "Markdown to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Write Report into Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown to HTML": {
+      "main": [
+        [
+          {
+            "node": "Create Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Report into Doc": {
+      "main": [
+        [
+          {
+            "node": "Document Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0da5fa3f-451f-4954-b9eb-882b6697118c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ccff9c59abbda9419ca7ad34d64ae06e5164a483e2565a48c58c25f23d184bea"
+  },
+  "nodeGroups": [],
+  "id": "za1XY9zcEA6lQFfE",
+  "tags": []
+}

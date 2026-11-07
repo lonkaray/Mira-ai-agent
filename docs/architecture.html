@@ -1,0 +1,332 @@
+<title>Mira Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one wide schematic of the n8n build up top, design notes and test coverage below */
+:root {
+  --bg: #f3f5f8; --panel: #ffffff; --ink: #16202c; --muted: #5a6677; --line: #8793a4; --rule: #dde2e9;
+  --llm: #2d5bcc; --llm-t: #e9effc;
+  --code: #a8691a; --code-t: #fcf1df;
+  --data: #2b7a57; --data-t: #e3f2ea;
+  --obs: #7448bf; --obs-t: #efe8fa;
+  --io: #4a5566; --io-t: #eceff4;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e131a; --panel: #151c25; --ink: #e5eaf1; --muted: #9ba7b7; --line: #6a7688; --rule: #253040;
+  --llm: #82a6ff; --llm-t: #182440; --code: #e6ad50; --code-t: #2c2213; --data: #63c497; --data-t: #11281e;
+  --obs: #b590f2; --obs-t: #241b36; --io: #a9b3c2; --io-t: #1b222c; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e131a; --panel: #151c25; --ink: #e5eaf1; --muted: #9ba7b7; --line: #6a7688; --rule: #253040;
+  --llm: #82a6ff; --llm-t: #182440; --code: #e6ad50; --code-t: #2c2213; --data: #63c497; --data-t: #11281e;
+  --obs: #b590f2; --obs-t: #241b36; --io: #a9b3c2; --io-t: #1b222c; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 56px; }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 72ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid; }
+.sw.llm { background: var(--llm-t); border-color: var(--llm); }
+.sw.code { background: var(--code-t); border-color: var(--code); }
+.sw.data { background: var(--data-t); border-color: var(--data); }
+.sw.obs { background: var(--obs-t); border-color: var(--obs); }
+.sw.io { background: var(--io-t); border-color: var(--io); }
+.sw.ext { background: var(--llm-t); border-color: var(--llm); border-style: dashed; }
+.sw.plan { background: transparent; border-color: var(--line); border-style: dashed; }
+.canvas { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; overflow-x: auto; padding: 12px; }
+.canvas svg { display: block; width: 100%; min-width: 900px; height: auto; }
+
+svg text { font-family: var(--f-body); }
+.t { fill: var(--ink); font-weight: 600; font-size: 14px; }
+.t2 { fill: var(--ink); font-weight: 600; font-size: 13px; }
+.th { fill: var(--ink); font-family: var(--f-display) !important; font-weight: 700; font-size: 16px; }
+.s { fill: var(--muted); font-size: 11.5px; }
+.m { fill: var(--ink); font-family: var(--f-mono) !important; font-size: 11.5px; }
+.b-llm { fill: var(--llm-t); stroke: var(--llm); stroke-width: 1.5; }
+.b-ext { fill: var(--llm-t); stroke: var(--llm); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.b-code { fill: var(--code-t); stroke: var(--code); stroke-width: 1.5; }
+.b-data { fill: var(--data-t); stroke: var(--data); stroke-width: 1.5; }
+.b-obs { fill: var(--obs-t); stroke: var(--obs); stroke-width: 1.5; }
+.b-io { fill: var(--io-t); stroke: var(--io); stroke-width: 1.5; }
+.b-plan { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chip { fill: var(--panel); stroke: var(--rule); }
+.chipt { fill: var(--ink); font-family: var(--f-mono) !important; font-size: 10.5px; }
+.ar { stroke: var(--line); stroke-width: 1.5; fill: none; }
+.tap { stroke: var(--obs); stroke-width: 1.4; stroke-dasharray: 3 4; fill: none; }
+.ah { fill: var(--line); }
+.aho { fill: var(--obs); }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.note { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 20px 22px; min-width: 0; }
+.note h2 { font-family: var(--f-display); font-size: 18px; margin: 0 0 8px; }
+.note p, .note ul { margin: 0; color: var(--ink); }
+.note ul { padding-left: 18px; display: grid; gap: 6px; }
+.note code, td code { font-family: var(--f-mono); font-size: 13px; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th { text-align: left; font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); }
+td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+td.ids { font-family: var(--f-mono); font-size: 13px; white-space: nowrap; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Capstone · Applied Agentic AI for PMs/TPMs · Nexora × ABCDE Ltd.</div>
+    <h1>Mira Architecture</h1>
+    <p>One n8n workflow with a router-pattern orchestrator and six agents on gpt-4o-mini. Code reads the project files, picks the agent and computes every count and date; each agent only writes up the facts it is given. Every request is traced in Langfuse. Clarifying questions stay in the chat; every other answer becomes a formatted Google Doc with PDF and Word download links, and a weekly workflow emails the status report as a PDF.</p>
+  </header>
+
+  <div class="legend" aria-label="Legend">
+    <span><i class="sw llm"></i>LLM agent</span>
+    <span><i class="sw ext"></i>Extended capability</span>
+    <span><i class="sw code"></i>Code node (no LLM)</span>
+    <span><i class="sw data"></i>Source data</span>
+    <span><i class="sw obs"></i>Observability</span>
+    <span><i class="sw io"></i>Interface</span>
+  </div>
+
+  <div class="canvas">
+  <svg viewBox="0 0 1200 1016" role="img" aria-labelledby="dt">
+    <title id="dt">Mira architecture: chat, webhook and weekly triggers feed Clean Input and an orchestrator; Route and Build Context reads four Google Drive files, picks one of six agents and computes its facts; the answer is traced to Langfuse, then either returned in chat (Clarifier) or saved as a Google Doc with PDF and Word links.</title>
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+      <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="aho" d="M0,0 L10,5 L0,10 z"/></marker>
+    </defs>
+
+    <!-- Triggers -->
+    <rect class="b-io" x="330" y="30" width="196" height="60" rx="8"/>
+    <text class="t" x="428" y="55" text-anchor="middle">Chat trigger</text>
+    <text class="s" x="428" y="75" text-anchor="middle">PM asks in plain language</text>
+    <rect class="b-io" x="542" y="30" width="196" height="60" rx="8"/>
+    <text class="t" x="640" y="55" text-anchor="middle">Webhook</text>
+    <text class="s" x="640" y="75" text-anchor="middle">Automated test runs</text>
+    <rect class="b-io" x="754" y="30" width="196" height="60" rx="8"/>
+    <text class="t" x="852" y="55" text-anchor="middle">Weekly workflow</text>
+    <text class="s" x="852" y="75" text-anchor="middle">Fri 09:00 · calls Mira</text>
+    <line class="ar" x1="428" y1="90" x2="428" y2="118" marker-end="url(#a)"/>
+    <line class="ar" x1="640" y1="90" x2="640" y2="118" marker-end="url(#a)"/>
+    <line class="ar" x1="852" y1="90" x2="852" y2="118" marker-end="url(#a)"/>
+
+    <!-- Clean Input -->
+    <rect class="b-io" x="330" y="120" width="620" height="48" rx="8"/>
+    <text class="t" x="640" y="141" text-anchor="middle">Clean Input</text>
+    <text class="s" x="640" y="159" text-anchor="middle">question (from chat or webhook) + started_at timestamp for latency</text>
+    <line class="ar" x1="640" y1="168" x2="640" y2="188" marker-end="url(#a)"/>
+
+    <!-- Orchestrator -->
+    <rect class="b-llm" x="330" y="190" width="620" height="72" rx="8"/>
+    <text class="th" x="640" y="216" text-anchor="middle">Orchestrator · LLM + structured output parser</text>
+    <text class="s" x="640" y="236" text-anchor="middle">Fills a form, does not answer: intent · input source (files / inline / none)</text>
+    <text class="s" x="640" y="252" text-anchor="middle">sprint · top N · time window · audience · fields provided</text>
+    <line class="ar" x1="640" y1="262" x2="640" y2="288" marker-end="url(#a)"/>
+
+    <!-- Source data -->
+    <rect class="b-data" x="30" y="190" width="260" height="220" rx="8"/>
+    <text class="th" x="50" y="218">Project data · Google Drive</text>
+    <text class="m" x="50" y="246">project_description.txt</text>
+    <text class="m" x="50" y="268">project_timeline.csv</text>
+    <text class="m" x="50" y="290">project_risks.csv</text>
+    <text class="m" x="50" y="312">sample_task_board.csv</text>
+    <text class="s" x="50" y="344">Download file → Extract from File</text>
+    <text class="s" x="50" y="362">Execute Once on every download</text>
+    <text class="s" x="50" y="380">1 · 8 · 10 · 25 items</text>
+    <line class="ar" x1="290" y1="350" x2="328" y2="350" marker-end="url(#a)"/>
+
+    <!-- Route & Build Context -->
+    <rect class="b-code" x="330" y="290" width="620" height="120" rx="8"/>
+    <text class="th" x="350" y="318">Route &amp; Build Context · JavaScript, no LLM</text>
+    <text class="s" x="350" y="344">1  Rules choose the agent: loaded files + agent exists → that agent; anything else → Clarifier</text>
+    <text class="s" x="350" y="364">2  Code computes the facts: counts, health, overdue and at-risk, milestone dates and window</text>
+    <text class="s" x="350" y="384">3  De-duplicates rows by ID; each agent receives only its own facts (e.g. one sprint)</text>
+    <text class="s" x="350" y="402">As-of date 2026-04-27 · week 1 = 2026-03-30 · at risk = blocked, overdue or due ≤ 7 days</text>
+    <line class="ar" x1="640" y1="410" x2="640" y2="436" marker-end="url(#a)"/>
+
+    <!-- Switch -->
+    <rect class="b-code" x="540" y="438" width="200" height="40" rx="8"/>
+    <text class="t" x="640" y="463" text-anchor="middle">Switch · 6 routes</text>
+    <path class="ar" d="M640,478 V496 M378,496 H898"/>
+    <line class="ar" x1="378" y1="496" x2="378" y2="516" marker-end="url(#a)"/>
+    <line class="ar" x1="482" y1="496" x2="482" y2="516" marker-end="url(#a)"/>
+    <line class="ar" x1="586" y1="496" x2="586" y2="516" marker-end="url(#a)"/>
+    <line class="ar" x1="690" y1="496" x2="690" y2="516" marker-end="url(#a)"/>
+    <line class="ar" x1="794" y1="496" x2="794" y2="516" marker-end="url(#a)"/>
+    <line class="ar" x1="898" y1="496" x2="898" y2="516" marker-end="url(#a)"/>
+
+    <!-- Agents -->
+    <rect class="b-llm" x="330" y="518" width="96" height="150" rx="8"/>
+    <text class="t2" x="378" y="544" text-anchor="middle">Planner</text>
+    <text class="s" x="378" y="580" text-anchor="middle">Phases,</text>
+    <text class="s" x="378" y="596" text-anchor="middle">milestones</text>
+    <rect class="chip" x="346" y="634" width="64" height="22" rx="11"/>
+    <text class="chipt" x="378" y="649" text-anchor="middle">T1</text>
+
+    <rect class="b-llm" x="434" y="518" width="96" height="150" rx="8"/>
+    <text class="t2" x="482" y="544" text-anchor="middle">Risk</text>
+    <text class="t2" x="482" y="561" text-anchor="middle">Assessor</text>
+    <text class="s" x="482" y="580" text-anchor="middle">Matrix or</text>
+    <text class="s" x="482" y="596" text-anchor="middle">top N</text>
+    <rect class="chip" x="450" y="634" width="64" height="22" rx="11"/>
+    <text class="chipt" x="482" y="649" text-anchor="middle">T3 · T7</text>
+
+    <rect class="b-llm" x="538" y="518" width="96" height="150" rx="8"/>
+    <text class="t2" x="586" y="544" text-anchor="middle">Status</text>
+    <text class="t2" x="586" y="561" text-anchor="middle">Reporter</text>
+    <text class="s" x="586" y="580" text-anchor="middle">Counts, health,</text>
+    <text class="s" x="586" y="596" text-anchor="middle">milestones</text>
+    <rect class="chip" x="550" y="634" width="72" height="22" rx="11"/>
+    <text class="chipt" x="586" y="649" text-anchor="middle">T5 · T10</text>
+
+    <rect class="b-ext" x="642" y="518" width="96" height="150" rx="8"/>
+    <text class="t2" x="690" y="544" text-anchor="middle">Milestone</text>
+    <text class="t2" x="690" y="561" text-anchor="middle">Tracker</text>
+    <text class="s" x="690" y="580" text-anchor="middle">At-risk tasks,</text>
+    <text class="s" x="690" y="596" text-anchor="middle">milestones</text>
+    <rect class="chip" x="654" y="634" width="72" height="22" rx="11"/>
+    <text class="chipt" x="690" y="649" text-anchor="middle">T8 · T11</text>
+
+    <rect class="b-ext" x="746" y="518" width="96" height="150" rx="8"/>
+    <text class="t2" x="794" y="544" text-anchor="middle">Stakeholder</text>
+    <text class="t2" x="794" y="561" text-anchor="middle">Update</text>
+    <text class="s" x="794" y="580" text-anchor="middle">Sprint</text>
+    <text class="s" x="794" y="596" text-anchor="middle">email</text>
+    <rect class="chip" x="762" y="634" width="64" height="22" rx="11"/>
+    <text class="chipt" x="794" y="649" text-anchor="middle">T12</text>
+
+    <rect class="b-llm" x="850" y="518" width="96" height="150" rx="8"/>
+    <text class="t2" x="898" y="544" text-anchor="middle">Clarifier</text>
+    <text class="s" x="898" y="580" text-anchor="middle">Asks for</text>
+    <text class="s" x="898" y="596" text-anchor="middle">missing info</text>
+    <rect class="chip" x="854" y="634" width="88" height="22" rx="11"/>
+    <text class="chipt" x="898" y="649" text-anchor="middle">T2·T4·T6·T9</text>
+
+    <!-- Agents to tracing -->
+    <path class="ar" d="M378,668 V688 M482,668 V688 M586,668 V688 M690,668 V688 M794,668 V688 M898,668 V688 M378,688 H898"/>
+    <line class="ar" x1="428" y1="688" x2="428" y2="708" marker-end="url(#a)"/>
+
+    <rect class="b-code" x="330" y="710" width="196" height="48" rx="8"/>
+    <text class="t" x="428" y="731" text-anchor="middle">Build Langfuse Trace</text>
+    <text class="s" x="428" y="749" text-anchor="middle">OTel spans + tags</text>
+    <line class="ar" x1="526" y1="734" x2="540" y2="734" marker-end="url(#a)"/>
+    <rect class="b-obs" x="542" y="710" width="196" height="48" rx="8"/>
+    <text class="t" x="640" y="731" text-anchor="middle">Send to Langfuse</text>
+    <text class="s" x="640" y="749" text-anchor="middle">HTTP POST · on error: continue</text>
+    <line class="ar" x1="738" y1="734" x2="752" y2="734" marker-end="url(#a)"/>
+    <rect class="b-code" x="754" y="710" width="196" height="48" rx="8"/>
+    <text class="t" x="852" y="731" text-anchor="middle">Clarifier? (If)</text>
+    <text class="s" x="852" y="749" text-anchor="middle">route = clarifier</text>
+
+    <!-- true: answer stays in chat -->
+    <line class="ar" x1="950" y1="734" x2="988" y2="734" marker-end="url(#a)"/>
+    <text class="s" x="969" y="726" text-anchor="middle">true</text>
+    <rect class="b-io" x="990" y="710" width="180" height="48" rx="8"/>
+    <text class="t" x="1080" y="731" text-anchor="middle">Mira Reply</text>
+    <text class="s" x="1080" y="749" text-anchor="middle">answer text</text>
+    <line class="ar" x1="1080" y1="758" x2="1080" y2="788" marker-end="url(#a)"/>
+    <rect class="b-io" x="990" y="790" width="180" height="48" rx="8"/>
+    <text class="t" x="1080" y="811" text-anchor="middle">Chat answer</text>
+    <text class="s" x="1080" y="829" text-anchor="middle">Clarifying questions</text>
+
+    <!-- false: build a document -->
+    <path class="ar" d="M852,758 V774 H401 V788" marker-end="url(#a)"/>
+    <text class="s" x="866" y="771">false</text>
+    <rect class="b-code" x="330" y="790" width="143" height="48" rx="8"/>
+    <text class="t2" x="401" y="811" text-anchor="middle">Prepare Document</text>
+    <text class="s" x="401" y="829" text-anchor="middle">title, header, name</text>
+    <line class="ar" x1="473" y1="814" x2="487" y2="814" marker-end="url(#a)"/>
+    <rect class="b-code" x="489" y="790" width="143" height="48" rx="8"/>
+    <text class="t2" x="560" y="811" text-anchor="middle">Markdown to HTML</text>
+    <text class="s" x="560" y="829" text-anchor="middle">headings, lists, tables</text>
+    <line class="ar" x1="632" y1="814" x2="646" y2="814" marker-end="url(#a)"/>
+    <rect class="b-data" x="648" y="790" width="143" height="48" rx="8"/>
+    <text class="t2" x="719" y="811" text-anchor="middle">Create Google Doc</text>
+    <text class="s" x="719" y="829" text-anchor="middle">Drive API · Mira Outputs</text>
+    <line class="ar" x1="791" y1="814" x2="805" y2="814" marker-end="url(#a)"/>
+    <rect class="b-data" x="807" y="790" width="143" height="48" rx="8"/>
+    <text class="t2" x="878" y="811" text-anchor="middle">Write Report into Doc</text>
+    <text class="s" x="878" y="829" text-anchor="middle">HTML → formatted Doc</text>
+    <line class="ar" x1="878" y1="838" x2="878" y2="856" marker-end="url(#a)"/>
+    <rect class="b-io" x="754" y="858" width="196" height="48" rx="8"/>
+    <text class="t" x="852" y="879" text-anchor="middle">Document Reply</text>
+    <text class="s" x="852" y="897" text-anchor="middle">Drive links + answer + doc_id</text>
+
+    <!-- Outputs -->
+    <path class="ar" d="M852,906 V922 M428,922 H852"/>
+    <line class="ar" x1="428" y1="922" x2="428" y2="938" marker-end="url(#a)"/>
+    <line class="ar" x1="640" y1="922" x2="640" y2="938" marker-end="url(#a)"/>
+    <line class="ar" x1="852" y1="922" x2="852" y2="938" marker-end="url(#a)"/>
+    <rect class="b-io" x="330" y="940" width="196" height="56" rx="8"/>
+    <text class="t" x="428" y="964" text-anchor="middle">Weekly email</text>
+    <text class="s" x="428" y="983" text-anchor="middle">Report + PDF attached</text>
+    <rect class="b-io" x="542" y="940" width="196" height="56" rx="8"/>
+    <text class="t" x="640" y="964" text-anchor="middle">Webhook JSON</text>
+    <text class="s" x="640" y="983" text-anchor="middle">Automated test runs</text>
+    <rect class="b-io" x="754" y="940" width="196" height="56" rx="8"/>
+    <text class="t" x="852" y="964" text-anchor="middle">Chat: saved to Drive</text>
+    <text class="s" x="852" y="983" text-anchor="middle">Doc · PDF · Word · folder links</text>
+
+    <!-- Langfuse -->
+    <rect class="b-obs" x="990" y="190" width="180" height="480" rx="8"/>
+    <text class="th" x="1010" y="218">Langfuse</text>
+    <text class="s" x="1010" y="238">OpenTelemetry endpoint</text>
+    <text class="s" x="1010" y="276">• One trace per request</text>
+    <text class="s" x="1010" y="298">• Orchestrator + agent</text>
+    <text class="s" x="1010" y="314">   as nested spans</text>
+    <text class="s" x="1010" y="336">• Tags: route, prompt</text>
+    <text class="s" x="1010" y="352">   version, baseline-run</text>
+    <text class="s" x="1010" y="374">• Tokens (estimated)</text>
+    <text class="s" x="1010" y="390">   and cost per request</text>
+    <text class="s" x="1010" y="412">• Latency per request</text>
+    <text class="s" x="1010" y="434">• Human annotation:</text>
+    <text class="s" x="1010" y="450">   test_pass,</text>
+    <text class="s" x="1010" y="466">   pm_usefulness</text>
+    <text class="s" x="1010" y="488">• 12-test baseline run</text>
+    <path class="tap" d="M700,710 V696 H1080 V674" marker-end="url(#ao)"/>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <section class="note">
+      <h2>Why a router</h2>
+      <p>PM requests vary: a plan, a risk list, a status count and a deadline check need different data and different prompts. A sequential pipeline would run every agent on every request, costing more and letting agents answer questions nobody asked. The orchestrator classifies once and one agent runs. The trade-off is that the router is a single point of failure, so its decision is visible in every Langfuse trace.</p>
+    </section>
+    <section class="note">
+      <h2>Code computes, the LLM writes</h2>
+      <p>LLMs miscount rows and get date maths wrong. Route &amp; Build Context counts tasks, applies the health rule, converts timeline weeks to dates and finds at-risk work before any agent runs. Agents are told to copy those facts exactly. Re-running a test changed the wording but never the facts.</p>
+    </section>
+    <section class="note">
+      <h2>Guardrails against fabrication</h2>
+      <ul>
+        <li>Vague or off-project requests go to the Clarifier, never to a generator.</li>
+        <li>Each agent only receives its own facts, so a Sprint 2 email cannot mention Sprint 3.</li>
+        <li>Rows are de-duplicated by ID, so a mis-set node cannot inflate counts.</li>
+        <li>Prompts forbid any task, risk, date or person not in the facts.</li>
+        <li>Documents are saved to the PM's own Drive, so they can be reviewed and edited before sharing.</li>
+        <li>Planned v2: a validator that checks every ID in the answer against the files.</li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="note">
+    <h2>Baseline test coverage by route</h2>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>Agent</th><th>Tests</th><th>A pass means</th></tr></thead>
+      <tbody>
+        <tr><td>Planner</td><td class="ids">T1</td><td>All 8 phases and 14 milestones from <code>project_timeline.csv</code>; goals copied from the description; nothing invented</td></tr>
+        <tr><td>Risk Assessor</td><td class="ids">T3, T7</td><td>Risks copied from <code>project_risks.csv</code>; exactly N when top N is asked</td></tr>
+        <tr><td>Status Reporter</td><td class="ids">T5, T10</td><td>Counts equal the task board (Done 5, In Progress 3, Blocked 1, To Do 16); only the requested sprint; upcoming milestones from the timeline</td></tr>
+        <tr><td>Milestone Tracker</td><td class="ids">T8, T11</td><td>T024 reported as blocked; only milestones inside the window (Phase 3, due 2026-05-10)</td></tr>
+        <tr><td>Stakeholder Update</td><td class="ids">T12</td><td>Only Sprint 2 tasks (T004, T005, T006); professional email</td></tr>
+        <tr><td>Clarifier</td><td class="ids">T2, T4, T6, T9</td><td>Asks for the missing details; produces no plan, risk list or status</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+</div>
