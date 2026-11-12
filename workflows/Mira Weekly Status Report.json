@@ -98,7 +98,7 @@
     },
     {
       "parameters": {
-        "sendTo": "ashutoshd.lonkar@gmail.com",
+        "sendTo": "your-email@example.com",
         "subject": "=Mira weekly status report · {{ $now.toFormat('yyyy-MM-dd') }}",
         "message": "=<p><b>Mira weekly status report</b> · ABCDE Ltd. AI Adoption Project</p>{{ $('Get PDF').first().json.html }}",
         "options": {
