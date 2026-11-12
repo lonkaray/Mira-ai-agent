@@ -1,6 +1,5 @@
 # Mira: AI Project Intelligence Assistant
 
-Capstone project for Interview Kickstart's *Applied Agentic AI for PMs/TPMs*.
 
 Mira is a multi-agent n8n workflow that helps Nexora's PMs and TPMs run the ABCDE Ltd. AI Adoption Project. It generates project plans, risk assessments, weekly status reports, milestone alerts and stakeholder update emails, all grounded in the project's own files, and asks for missing information instead of guessing. Reports are saved to Google Drive as formatted documents with one-click PDF and Word downloads, and a scheduled workflow emails the weekly status report with the PDF attached. Every request is traced in Langfuse.
 
@@ -47,7 +46,7 @@ Mira is a multi-agent n8n workflow that helps Nexora's PMs and TPMs run the ABCD
 | Average PM usefulness (human score, 1–5) | 4.5 | — |
 | Average latency per request | 10.6 s | 10.2 s |
 | Average cost per request | $0.00046 | $0.00050 |
-| Projected monthly cost (10 PMs × 8 requests/day) | $0.78 | $0.83 |
+| ed monthly cost (10 PMs × 8 requests/day) | $0.78 | $0.83 |
 
 ## Repository
 
@@ -66,22 +65,22 @@ Mira is a multi-agent n8n workflow that helps Nexora's PMs and TPMs run the ABCD
 
 ## Setup
 
-1. Upload the four project files in `data/` (all except `eval_mira_inputs.txt`) to a Google Drive folder, and create a second folder named **Mira Outputs**.
+1. Upload the four  files in `data/` (all except `eval_mira_inputs.txt`) to a Google Drive folder, and create a second folder named **Mira Outputs**.
 2. In n8n, import both JSON files from `workflows/` (*Workflows → Import from file*).
 3. Add credentials:
    - **OpenAI** on the seven OpenAI Chat Model nodes
-   - **Google Drive** on the four *Download* nodes and the two Drive API nodes. In the credential's settings, allow the domains `googleapis.com` and `www.googleapis.com`. Reselect each project file in the Download nodes.
+   - **Google Drive** on the four *Download* nodes and the two Drive API nodes. In the credential's settings, allow the domains `googleapis.com` and `www.googleapis.com`. Reselect each  file in the Download nodes.
    - **Basic Auth** on *Send to Langfuse* (username = Langfuse public key, password = secret key)
    - **Gmail** on the weekly workflow's *Send email* node
 4. Set the **Mira Outputs** folder ID in *Create Google Doc* and *Document Reply*. In *Send to Langfuse*, use your region's endpoint, for example `https://us.cloud.langfuse.com/api/public/otel/v1/traces`, with the header `x-langfuse-ingestion-version: 4`.
 5. In the weekly workflow, reselect the main workflow in *Call Mira Base*.
-6. Activate the main workflow, open the chat and ask: *Summarize the current project status: how many tasks are done, in progress, and to do?* Expected: Done 5, In Progress 3, Blocked 1, To Do 16, with a confirmation that the report was saved to Drive.
+6. Activate the main workflow, open the chat and ask: *Summarize the current  status: how many tasks are done, in progress, and to do?* Expected: Done 5, In Progress 3, Blocked 1, To Do 16, with a confirmation that the report was saved to Drive.
 
 ## Assumptions
 
 | Setting | Value | Why |
 |---|---|---|
-| As-of date | 2026-04-27 | The files have no current date and the real date is after the project ends; a fixed date keeps tests repeatable |
+| As-of date | 2026-04-27 | The files have no current date and the real date is after the  ends; a fixed date keeps tests repeatable |
 | Week 1 start | 2026-03-30 | Not in the files; aligns Sprints 1–3 with Phases 1–3 |
 | At risk | Blocked, overdue, or open and due within 7 days | Not defined in the brief |
 | Upcoming | The next 14 days, unless the user names a window | "Next 2 weeks" in T11 |
